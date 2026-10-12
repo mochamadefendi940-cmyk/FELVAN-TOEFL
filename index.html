@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulasi TOEFL Reading</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .teks-bacaan { background: #eef2f5; padding: 15px; border-left: 5px solid #2196F3; margin-bottom: 20px; line-height: 1.6; }
+        .pertanyaan { font-weight: bold; font-size: 18px; margin-bottom: 15px; }
+        .opsi { margin-bottom: 10px; display: block; cursor: pointer; padding: 10px; border: 1px solid #ddd; border-radius: 5px;}
+        .opsi:hover { background: #e9ecef; }
+        button { background: #4CAF50; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px; cursor: pointer; margin-top: 20px; }
+        button:hover { background: #45a049; }
+        #hasil { margin-top: 20px; font-weight: bold; font-size: 18px; display: none; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Simulasi TOEFL - Section: Reading</h2>
+    <hr>
+    
+    <div id="loading">⏳ Memuat soal dari database...</div>
+    
+    <!-- Area ini akan otomatis terisi soal dari Google Sheet -->
+    <div id="area-soal" style="display: none;">
+        <div class="teks-bacaan" id="teks"></div>
+        <div class="pertanyaan" id="tanya"></div>
+        
+        <label class="opsi"><input type="radio" name="jawaban" value="A"> <span id="opsiA"></span></label>
+        <label class="opsi"><input type="radio" name="jawaban" value="B"> <span id="opsiB"></span></label>
+        <label class="opsi"><input type="radio" name="jawaban" value="C"> <span id="opsiC"></span></label>
+        <label class="opsi"><input type="radio" name="jawaban" value="D"> <span id="opsiD"></span></label>
+
+        <button onclick="cekJawaban()">Kirim Jawaban</button>
+    </div>
+
+    <div id="hasil"></div>
+</div>
+
+<script>
+    // ========================================================
+    // PASTE WEB APP URL ANDA DI BAWAH INI (di dalam tanda kutip)
+    // ========================================================
+    const API_URL = "https://script.google.com/macros/s/AKfycby9oAI89LPWNXVnqStOTlhvjjFtUfqTNE9fOttU-d1OMztTg496fQIGdCgRO4STgkL0Pg/exec";
+    
+    let kunciJawabanBenar = "";
+
+    // Fungsi mengambil soal dari Google Sheet
+    async function ambilSoal() {
+        try {
+            const response = await fetch(API_URL);
+            const result = await response.json();
+
+            if(result.status === "sukses" && result.data.length > 0) {
+                let soal = result.data[0]; // Mengambil soal pertama
+                
+                document.getElementById('teks').innerText = soal.teks;
+                document.getElementById('tanya').innerText = soal.pertanyaan;
+                document.getElementById('opsiA').innerText = "A. " + soal.opsi.a;
+                document.getElementById('opsiB').innerText = "B. " + soal.opsi.b;
+                document.getElementById('opsiC').innerText = "C. " + soal.opsi.c;
+                document.getElementById('opsiD').innerText = "D. " + soal.opsi.d;
+                
+                kunciJawabanBenar = soal.kunci; // Menyimpan kunci rahasia
+
+                document.getElementById('loading').style.display = "none";
+                document.getElementById('area-soal').style.display = "block";
+            }
+        } catch (error) {
+            document.getElementById('loading').innerText = "Gagal memuat soal. Pastikan URL Web App sudah benar.";
+        }
+    }
+
+    // Fungsi mengoreksi jawaban
+    function cekJawaban() {
+        let jawabanSiswa = document.querySelector('input[name="jawaban"]:checked');
+        let divHasil = document.getElementById('hasil');
+        
+        if (!jawabanSiswa) {
+            alert("Silakan pilih jawaban terlebih dahulu!");
+            return;
+        }
+
+        divHasil.style.display = "block";
+        if (jawabanSiswa.value === kunciJawabanBenar) {
+            divHasil.style.backgroundColor = "#d4edda";
+            divHasil.style.color = "#155724";
+            divHasil.innerText = "✅ Benar! Jawaban tepat.";
+        } else {
+            divHasil.style.backgroundColor = "#f8d7da";
+            divHasil.style.color = "#721c24";
+            divHasil.innerText = "❌ Salah. Kunci jawaban yang benar adalah: " + kunciJawabanBenar;
+        }
+    }
+
+    // Jalankan otomatis saat web dibuka
+    ambilSoal();
+</script>
+
+</body>
+</html>
